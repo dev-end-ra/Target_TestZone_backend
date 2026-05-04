@@ -7,7 +7,7 @@ const testSchema = new mongoose.Schema({
   subjects: [{ type: String }],
   totalQuestions: { type: Number, default: 0 },
   liveAt: { type: Date, default: Date.now },
-  liveUntil: { type: Date }, // End of test window; null = always available
+  liveUntil: { type: Date }, 
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

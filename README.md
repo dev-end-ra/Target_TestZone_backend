@@ -124,11 +124,31 @@ node scripts/makeAdmin.js your-email@example.com
 ### 📝 Tests — `/api/tests` *(JWT + Approved required)*
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+|--------|----------|-----------|
 | GET | `/` | List all active tests |
 | GET | `/:id/questions` | Get questions (checks live window) |
 | POST | `/:id/submit` | Submit answers, returns score |
 | GET | `/submission/:id` | Get detailed submission |
+
+---
+
+### 📚 Practice — `/api/practice` *(JWT required)*
+
+| Method | Endpoint | Description |
+|--------|----------|-----------|
+| GET | `/subjects` | List distinct subjects |
+| GET | `/:subject/chapters` | List chapters for a subject |
+| GET | `/:subject/:chapter/questions` | Get shuffled practice questions (max 20) |
+
+---
+
+### 🔔 Notifications — `/api/notifications` *(JWT required)*
+
+| Method | Endpoint | Description |
+|--------|----------|-----------|
+| GET | `/` | Get my notifications + unread count |
+| PUT | `/:id/read` | Mark one as read |
+| PUT | `/read-all` | Mark all as read |
 
 ---
 

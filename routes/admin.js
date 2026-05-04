@@ -2,7 +2,12 @@ import express from 'express';
 import Test from '../models/Test.js';
 import Question from '../models/Question.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+
+// Helper: create a notification for a user
+const notify = (userId, title, message, type = 'info') =>
+  Notification.create({ userId, title, message, type });
 
 const router = express.Router();
 
@@ -47,6 +52,15 @@ router.put('/users/:id/approve', authMiddleware, adminMiddleware, async (req, re
     ).select('-password');
 
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Auto-notify the student
+    await notify(
+      user._id,
+      'Account Approved!',
+      `Welcome to Target TestZone! Your Student ID is ${studentId}. You can now access all live mock tests.`,
+      'success'
+    );
+
     res.json({ message: 'Student approved', user });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -86,6 +100,18 @@ router.post('/tests', authMiddleware, adminMiddleware, async (req, res) => {
     const { title, type, durationSeconds, subjects, liveAt, liveUntil } = req.body;
     const test = new Test({ title, type, durationSeconds, subjects, liveAt, liveUntil });
     await test.save();
+
+    // Broadcast notification to all approved students
+    const students = await User.find({ role: { $ne: 'admin' }, status: 'approved' }).select('_id');
+    const liveDate = liveAt ? new Date(liveAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'soon';
+    const notifs = students.map(s => ({
+      userId: s._id,
+      title: 'New Test Scheduled',
+      message: `"${title}" is now available. Test starts: ${liveDate}.`,
+      type: 'info',
+    }));
+    if (notifs.length) await Notification.insertMany(notifs);
+
     res.status(201).json(test);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -108,6 +134,22 @@ router.post('/tests/:id/questions/import', authMiddleware, adminMiddleware, asyn
   }
 });
 
+// Manual broadcast notification to all approved students
+router.post('/notify', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { title, message, type = 'info' } = req.body;
+    if (!title || !message) return res.status(400).json({ message: 'Title and message are required' });
+
+    const students = await User.find({ role: { $ne: 'admin' }, status: 'approved' }).select('_id');
+    const notifs = students.map(s => ({ userId: s._id, title, message, type }));
+    await Notification.insertMany(notifs);
+
+    res.json({ message: `Notification sent to ${notifs.length} students` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Platform stats
 router.get('/stats', authMiddleware, adminMiddleware, async (req, res) => {
   try {
@@ -121,3 +163,4 @@ router.get('/stats', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 export default router;
+

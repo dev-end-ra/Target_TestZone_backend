@@ -9,6 +9,8 @@ import testRoutes from './routes/tests.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import notificationRoutes from './routes/notifications.js';
+import practiceRoutes from './routes/practice.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +28,8 @@ app.use('/api/tests', testRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/practice', practiceRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
